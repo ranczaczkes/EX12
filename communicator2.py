@@ -103,7 +103,6 @@ class Communicator:
         """
         return self.__socket is not None
 
-
     def __get_message(self):
 
         """
@@ -126,7 +125,3 @@ class Communicator:
             except socket.error:
                 pass
         self.__root.after(self.WAIT_PERIOD, self.__get_message)
-
-
-    def bind_func_to_ai_event(self,func):
-        self.__bound_func =func

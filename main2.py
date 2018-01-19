@@ -20,11 +20,11 @@ class GUI:
 
     def __init__(self,root, parent, port, ip=None):
         self.game_obj=Game()
+        self._ai_mode = False
         print('parent:',parent)
         print('port:', port)
 
-        if parent == 'ai':
-            self.ai_obj= Ai()
+
         """
         Initializes the GUI and connects the communicator.
         :param parent: the tkinter root.
@@ -33,8 +33,8 @@ class GUI:
         :param server: true if the communicator is a server, otherwise false.
         """
         
-        self._parent = root
-
+        self._root = root
+        self._parent = parent
 
         self.__communicator = Communicator(root, port, ip)
         self.__communicator.connect()
@@ -48,24 +48,25 @@ class GUI:
         self._canvas.pack()
         self._create_circle()
 
-        if parent == 'is_human':
-
-            self._canvas.bind("<Button-1>", self.callback)
+        if parent == 'ai':
+            self.ai_obj= Ai()
+            self._ai_mode = True
+            if (server == True and self.game_obj.get_current_player() == 0) or (
+                    server == False and self.game_obj.get_current_player() == 1):
+                self.ai_move()
         else:
-            #self.ai_obj.find_legal_move(self.game_obj,self.game_obj.make_move)
-            self._create_circle()
+            self._canvas.bind("<Button-1>", self.callback)
 
 
-    def ai_move(self):
 
-        # self.frame.pack()
-        pass
+
+
+
     def __place_widgets(self):
-
         pass
 
     def popup_showinfo(self,obj):
-        showinfo("Window", "Hello World!")
+        showinfo("Window", "The winner is: " + str(obj))
 
 
     def _create_circle(self):
@@ -87,14 +88,19 @@ class GUI:
 
         print('column=',math.floor(event.x/100))
         column=math.floor(event.x/100)
-        if (server == True and self.game_obj.get_current_player() == 0) or (server == False and self.game_obj.get_current_player() == 1):
+        if (server == True and self.game_obj.get_current_player() == 0) \
+                or (server == False and self.game_obj.get_current_player() == 1):
             self.game_obj.make_move(column)
-            self.__communicator.send_message(column)
-            self.color_circle(self.game_obj.get_current_player(),column)
-            if self.game_obj.get_winner() == 0 or self.game_obj.get_winner() == 1 or self.game_obj.get_winner() == 2:
-                self.popup_showinfo(self.game_obj.get_winner())
-                print(self.game_obj.get_current_player)
-                self.__communicator.send_message('p'+str(self.game_obj.get_winner()))
+            self.color_circle(self.game_obj.get_current_player(), column)
+            message = str(column)
+
+            is_winner =self.game_obj.get_winner()
+
+            if  is_winner == 0 or is_winner == 1 or is_winner == 2:
+                message += str(is_winner)
+                self.popup_showinfo(is_winner)
+
+            self.__communicator.send_message(message)
         # return column
 
 
@@ -122,18 +128,38 @@ class GUI:
         :return: None.
         """
         if text:
-            if text == 'p1' or text == 'p2' or text == 'p0':
-                self.popup_showinfo(text)
+            if len(text) > 1:
+                self.popup_showinfo(text[1])
             else:
-                column=int(text)
+                column=int(text[0])
+                print("The column i got is:",column)
                 self.game_obj.make_move(column)
                 self.color_circle(self.game_obj.get_current_player(), column)
 
-            self._parent.after(self.MESSAGE_DISPLAY_TIMEOUT,
-                               self.__handle_message)
+
+                if self._ai_mode:
+                    self.ai_move()
+
+                self._root.after(self.MESSAGE_DISPLAY_TIMEOUT,
+                                 self.__handle_message)
        # else:
             #self.__label["text"] = ""
         pass
+    def ai_move(self):
+        self.ai_obj.find_legal_move(self.game_obj, self.ai_move)
+        column =  self.game_obj.get_last_move()
+        self.color_circle(self.game_obj.get_current_player(),column)
+
+        message = str(column)
+
+        is_winner =self.game_obj.get_winner()
+        print("who is the winner: ",self.game_obj.get_winner())
+        if  is_winner == 0 or is_winner == 1 or is_winner == 2:
+            message += str(is_winner)
+            self.popup_showinfo(is_winner)
+
+        self.__communicator.send_message(message)
+
 
 if __name__ == '__main__':
     root = t.Tk()

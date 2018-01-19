@@ -35,6 +35,9 @@ class Game:
         self.last_move = column
         self.current_player = not self.current_player
 
+    def get_last_move(self):
+        return self.last_move
+
     def get_player_one(self):
         return self.PLAYER_ONE
     def get_player_tow(self):
