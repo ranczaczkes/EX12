@@ -1,4 +1,5 @@
 from itertools import repeat
+import math
 import copy
 class Game:
 
@@ -11,8 +12,6 @@ class Game:
 
     def __init__(self):
 
-        #self.board = [[0 for i in repeat(None, Game.ROW_NUMBER)]
-         #             for i in repeat(None, Game.COL_NUMBER)]
         self.empty_spaces = [6
                       for i in repeat(None, Game.COL_NUMBER)]
         self.board = {}
@@ -20,8 +19,7 @@ class Game:
             self.board[i] = [" " for i in repeat(None, Game.ROW_NUMBER)]
         self.current_player = False
         self.last_move = -1
-        print(self.board)
-        print(self.empty_spaces)
+
 
     def make_move(self, column):
         try:
@@ -37,9 +35,14 @@ class Game:
         self.last_move = column
         self.current_player = not self.current_player
 
+    def get_player_one(self):
+        return self.PLAYER_ONE
+    def get_player_tow(self):
+        return self.PLAYER_TWO
 
     def get_empty_spaces(self):
         return copy.deepcopy(self.empty_spaces)
+
     def get_empty_row(self,column):
         return self.empty_spaces[column]
 
@@ -56,17 +59,18 @@ class Game:
             return Game.PLAYER_TWO
 
         return None
-
-    def check_winning_move(self):
+    def check_column(self):
         last_player = int(not self.current_player)
         count = 0
-
         if self.empty_spaces[self.last_move] < 3:
             for i in range(4):
                 if self.board[self.last_move][i + self.empty_spaces[self.last_move]] == last_player:
                     count += 1
             if count == 4: return True
+        return False
 
+    def check_row(self):
+        last_player = int(not self.current_player)
         count = 0
         for i in range(Game.COL_NUMBER):
             if self.board[i][self.empty_spaces[self.last_move]] == last_player:
@@ -74,20 +78,21 @@ class Game:
             else:
                 count = 0
             if count == 4: return True
+        return False
 
+    def check_diag(self):
+        last_player = int(not self.current_player)
         count = 0
         cell_add_value = self.last_move + self.empty_spaces[self.last_move]
 
-        print(cell_add_value)
         if (self.last_move + self.empty_spaces[self.last_move] > 2) \
-                and (self.last_move + self.empty_spaces[self.last_move] < 8):
+                and (self.last_move + self.empty_spaces[self.last_move] < 9):
             if self.last_move + self.empty_spaces[self.last_move] < 6:
                 tup = (cell_add_value,0)
                 target = (0,cell_add_value)
             else:
-                tup = (Game.ROW_NUMBER-1, cell_add_value-Game.ROW_NUMBER-1)
-                target = (Game.ROW_NUMBER-1, cell_add_value-Game.ROW_NUMBER-1)
-
+                tup = (Game.ROW_NUMBER-1,cell_add_value-Game.ROW_NUMBER+1 )
+                target = (cell_add_value-Game.COL_NUMBER+1,Game.COL_NUMBER-1)
             while tup != target:
                 if self.board[tup[1]][tup[0]] == last_player:
                     count += 1
@@ -98,14 +103,14 @@ class Game:
 
         cell_sub_value = self.last_move - self.empty_spaces[self.last_move]
         if cell_sub_value < 4 and cell_sub_value > -3:
-            if cell_sub_value >= 0 :
+            if cell_sub_value > 0 :
                 tup = (0, cell_sub_value)
                 target = (Game.ROW_NUMBER - cell_sub_value,Game.COL_NUMBER-1 )
             else:
-                tup = (cell_sub_value* -1, 0)
-                target = (Game.ROW_NUMBER - 1, Game.COL_NUMBER + cell_sub_value -2)
-            print(tup)
-            print(target)
+                tup = (cell_sub_value * -1, 0)
+                print(cell_sub_value)
+                target = (Game.ROW_NUMBER - 1,Game.ROW_NUMBER -1 + cell_sub_value)
+
             while tup != target:
                 if self.board[tup[1]][tup[0]] == last_player:
                     count += 1
@@ -113,7 +118,10 @@ class Game:
                     count = 0
                 if count == 4: return True
                 tup = (tup[0] + 1, tup[1] + 1)
-        return False
+            return False
+
+    def check_winning_move(self):
+        return  self.check_row() or self.check_column() or self.check_diag()
 
 
     def get_player_at(self, row, col):
@@ -127,7 +135,8 @@ class Game:
         if self.current_player:
             return Game.PLAYER_TWO
         return Game.PLAYER_ONE
-
+    def get_board(self):
+        return copy.deepcopy(self.board)
     def print_board(self):
         """ prints a board to the screen
 
@@ -141,25 +150,3 @@ class Game:
             toPrint += '|'
             print(toPrint)
         print('-------------')
-
-
-if __name__ == '__main__':
-    g = Game()
-    g.make_move(0)
-    g.make_move(0)
-    g.make_move(0)
-    g.make_move(0)
-    g.make_move(1)
-    g.make_move(1)
-    g.make_move(4)
-    g.make_move(1)
-    g.make_move(2)
-    g.make_move(2)
-    g.make_move(5)
-    g.make_move(4)
-    g.make_move(1)
-    g.make_move(3)
-
-
-    g.print_board()
-    print(g.check_winning_move())

@@ -37,7 +37,7 @@ class Communicator:
         if self.__ip is None:
             self.__ip = socket.gethostbyname(socket.gethostname())
             self.__server_socket = socket.socket()
-            self.__server_socket.bind((self.__ip, self.__port))
+            self.__server_socket.bind((self.__ip, int(self.__port)))
             self.__server_socket.listen(1)
             self.__server_socket.setblocking(0) # non blocking.
 
@@ -61,7 +61,7 @@ class Communicator:
             else:
                 self.__socket = socket.socket()
                 self.__socket.settimeout(self.CONNECT_TIMEOUT)
-                self.__socket.connect((self.__ip, self.__port))
+                self.__socket.connect((self.__ip, int(self.__port)))
                 self.__socket.setblocking(0)
             self.__get_message()
         except socket.error:
@@ -82,6 +82,8 @@ class Communicator:
         self.__bound_func = func
 
     def send_message(self, message):
+
+
         """
         Sends a message via the socket (if a connection is established).
         If the socket is not yet connected, does nothing (no retry).
@@ -102,6 +104,7 @@ class Communicator:
         return self.__socket is not None
 
     def __get_message(self):
+
         """
         Upon regular intervals, try and receive a message from the connection
         socket (if established). If the message is empty, it means the remote
